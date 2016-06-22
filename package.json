@@ -35,6 +35,7 @@
     "esprima": "^2.7.0",
     "events": "^1.0.2",
     "htmljs-parser": "^1.5.3",
+    "inline-source-map-comment": "^1.0.5",
     "lasso-package-root": "^1.0.0",
     "minimatch": "^0.2.14",
     "object-assign": "^4.1.0",

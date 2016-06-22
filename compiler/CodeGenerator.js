@@ -12,6 +12,7 @@ const isValidJavaScriptVarName = require('./util/isValidJavaScriptVarName');
 const createError = require('raptor-util/createError');
 const path = require('path');
 const SourceMapGenerator = require('source-map').SourceMapGenerator;
+const inlineSourceMapComment = require('inline-source-map-comment');
 
 class GeneratorEvent {
     constructor(node, codegen) {
@@ -100,7 +101,7 @@ class Slot {
 
             // add source map to generated code
             // console.log('THE SOURCE MAP:', codegen._map.toString());
-            codegen._code += '\/*' + codegen._map.toString() + '*\/\n';
+            codegen._code += inlineSourceMapComment(codegen._map) + '\n';
             // console.log('codegen code:', codegen._code);
         } else {
             let beforeWhitespaceMatches = beforeCode.match(/[\n]\s*$/);

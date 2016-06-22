@@ -60,7 +60,7 @@ function removeSourceMap(sourceString) {
         let sourcemapLine = lines[sourcemapLineNum];
 
         // move the line that containing source map
-        if (sourcemapLine.startsWith('\/*')) {
+        if (sourcemapLine.startsWith('//# sourceMappingURL')) {
             lines.splice(sourcemapLineNum, 1);
             result = lines.join('\n');
         }
