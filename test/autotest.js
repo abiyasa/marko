@@ -41,10 +41,32 @@ function compareHelper(dir, actual, suffix) {
 
     if (isObject) {
         actual = JSON.parse(actualString);
+    } else {
+        // ignore sourcemap at the moment
+        actual = removeSourceMap(actual);
     }
+
 
     var expected = isObject ? JSON.parse(expectedString) : expectedString;
     assert.deepEqual(actual, expected);
+}
+
+function removeSourceMap(sourceString) {
+    let lines = sourceString.split('\n');
+    let result = sourceString;
+
+    if (lines.length > 1) {
+        const sourcemapLineNum = lines.length - 2;
+        let sourcemapLine = lines[sourcemapLineNum];
+
+        // move the line that containing source map
+        if (sourcemapLine.startsWith('\/*')) {
+            lines.splice(sourcemapLineNum, 1);
+            result = lines.join('\n');
+        }
+    }
+
+    return result;
 }
 
 function autoTest(name, dir, run, options, done) {

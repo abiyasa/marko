@@ -10,6 +10,8 @@ const Container = require('./ast/Container');
 const util = require('util');
 const isValidJavaScriptVarName = require('./util/isValidJavaScriptVarName');
 const createError = require('raptor-util/createError');
+const path = require('path');
+const SourceMapGenerator = require('source-map').SourceMapGenerator;
 
 class GeneratorEvent {
     constructor(node, codegen) {
@@ -41,6 +43,7 @@ class Slot {
 
         if (slotNode.statement) {
             codegen.write('\n');
+            codegen.currentLine++;
         }
         this._end = codegen._code.length;
 
@@ -58,6 +61,14 @@ class Slot {
         let slotCode;
 
         if (content) {
+            // only for compile context
+            let sourceFilename = (codegen.context && codegen.context.filename) || 'noname';
+            let pathSourceFile = path.parse(sourceFilename);
+            codegen._map = new SourceMapGenerator({
+                file: pathSourceFile.base,
+                sourceRoot: pathSourceFile.dir
+            });
+
             let isStatement = this._statement;
 
             codegen.currentIndent = this.currentIndent;
@@ -86,6 +97,11 @@ class Slot {
 
         if (slotCode) {
             codegen._code = beforeCode + slotCode + afterCode;
+
+            // add source map to generated code
+            // console.log('THE SOURCE MAP:', codegen._map.toString());
+            codegen._code += '\/*' + codegen._map.toString() + '*\/\n';
+            // console.log('codegen code:', codegen._code);
         } else {
             let beforeWhitespaceMatches = beforeCode.match(/[\n]\s*$/);
             if (beforeWhitespaceMatches != null) {
@@ -109,6 +125,8 @@ class Generator {
 
         this._code = '';
         this.currentIndent = '';
+        this.currentLine = 0;
+        this.currentColumn = 0;
         this.inFunction = false;
 
         this._doneListeners = [];
@@ -324,6 +342,7 @@ class Generator {
 
         this.write('{\n')
             .incIndent();
+        this.currentLine++;
 
         let oldCodeLength = this._code.length;
 
@@ -332,6 +351,7 @@ class Generator {
         if (this._bufferedWrites) {
             if (this._code.length !== oldCodeLength) {
                 this._code += '\n';
+                this.currentLine++;
             }
             this._flushBufferedWrites();
         }
@@ -360,6 +380,7 @@ class Generator {
 
             if (!firstStatement) {
                 this._write('\n');
+                this.currentLine++;
             }
 
             if (!this._code.endsWith(currentIndent)) {
@@ -384,14 +405,39 @@ class Generator {
                 // Do nothing
             } else if (this._code.endsWith(';')) {
                 this._code += '\n';
+                this.currentLine++;
             }  else if (this._code.endsWith('\n' + this.currentIndent)) {
                 // Do nothing
             } else {
                 this._code += ';\n';
+                this.currentLine++;
             }
+
+            this._generateSourceMapForStatement(node);
 
             firstStatement = false;
         });
+    }
+
+    _generateSourceMapForStatement(node) {
+        let posInfo = this.context.getPosInfo(node.pos);
+        let pathSourceFile = path.parse(posInfo.path);
+
+        if (this._map) {
+            // console.log(`SOURCE: ${pathSourceFile.base} line: ${posInfo.line} column: ${posInfo.column}`);
+            this._map.addMapping({
+                generated: {
+                    // TODO track generated line & col number
+                    line: this.currentLine,
+                    column: this.currentIndent.length
+                },
+                source: pathSourceFile.base,
+                original: {
+                    line: posInfo.line,
+                    column: posInfo.column
+                }
+            });
+        }
     }
 
     _beginCaptureCode() {
@@ -463,15 +509,18 @@ class Generator {
                 this._write(' +\n');
                 this.writeLineIndent();
                 this._write(this._indentStr);
+                this.currentLine++;
             }
 
             this.generateCode(write);
         }
 
         this._write(');\n');
+        this.currentLine++;
 
         if (addSeparator) {
             this._write('\n' + this.currentIndent);
+            this.currentLine++;
         }
     }
 
@@ -550,6 +599,7 @@ class Generator {
             }
 
             this.write('[\n');
+            this.currentLine++;
             this.incIndent();
 
             for (let i=0; i<value.length; i++) {
@@ -565,8 +615,10 @@ class Generator {
 
                 if (i < value.length - 1) {
                     this.write(',\n');
+                    this.currentLine++;
                 } else {
                     this.write('\n');
+                    this.currentLine++;
                 }
             }
 
@@ -584,6 +636,7 @@ class Generator {
 
             this.incIndent();
             this.write('{\n');
+            this.currentLine++;
             this.incIndent();
 
             for (let i=0; i<keys.length; i++) {
@@ -606,8 +659,10 @@ class Generator {
 
                 if (i < keys.length - 1) {
                     this.write(',\n');
+                    this.currentLine++;
                 } else {
                     this.write('\n');
+                    this.currentLine++;
                 }
             }
 
