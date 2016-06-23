@@ -56,12 +56,12 @@ function removeSourceMap(sourceString) {
     let result = sourceString;
 
     if (lines.length > 1) {
-        const sourcemapLineNum = lines.length - 2;
-        let sourcemapLine = lines[sourcemapLineNum];
+        const lastLineNum = lines.length - 1;
+        let lastLine = lines[lastLineNum];
 
         // move the line that containing source map
-        if (sourcemapLine.startsWith('//# sourceMappingURL')) {
-            lines.splice(sourcemapLineNum, 1);
+        if (lastLine.startsWith('//# sourceMappingURL')) {
+            lines.splice(lastLineNum, 1);
             result = lines.join('\n');
         }
     }

@@ -101,7 +101,7 @@ class Slot {
 
             // add source map to generated code
             // console.log('THE SOURCE MAP:', codegen._map.toString());
-            codegen._code += inlineSourceMapComment(codegen._map) + '\n';
+            codegen._code += '\n' + inlineSourceMapComment(codegen._map.toString());
             // console.log('codegen code:', codegen._code);
         } else {
             let beforeWhitespaceMatches = beforeCode.match(/[\n]\s*$/);
