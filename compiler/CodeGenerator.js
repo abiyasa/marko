@@ -436,7 +436,8 @@ class Generator {
                 original: {
                     line: posInfo.line,
                     column: posInfo.column
-                }
+                },
+                name: node.type
             });
         }
     }
