@@ -247,6 +247,8 @@ class Generator {
             }
         }
 
+        this._generateSourceMapForStatement(node);
+
         if (finalNode) {
             if (isStatement) {
                 this.generateStatements(finalNode);
@@ -413,8 +415,6 @@ class Generator {
                 this._code += ';\n';
                 this.currentLine++;
             }
-
-            this._generateSourceMapForStatement(node);
 
             firstStatement = false;
         });
