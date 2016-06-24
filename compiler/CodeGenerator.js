@@ -247,8 +247,6 @@ class Generator {
             }
         }
 
-        this._generateSourceMapForStatement(node);
-
         if (finalNode) {
             if (isStatement) {
                 this.generateStatements(finalNode);
@@ -257,6 +255,8 @@ class Generator {
             }
         } else if (node) {
             let generateCodeMethod = node.generateCode;
+
+            this._generateSourceMapForStatement(node);
 
             if (!generateCodeMethod) {
                 generateCodeMethod = node[this._codegenCodeMethodName];
@@ -425,6 +425,7 @@ class Generator {
         let pathSourceFile = path.parse(posInfo.path);
 
         if (this._map) {
+            // console.log(node.type);
             // console.log(`SOURCE: ${pathSourceFile.base} line: ${posInfo.line} column: ${posInfo.column}`);
             this._map.addMapping({
                 generated: {
